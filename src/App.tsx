@@ -1,35 +1,91 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { WorkoutCard, type WorkoutDTO } from "./components/WorkoutCard";
+import { NewWorkoutForm } from "./components/NewWorkoutForm";
+import { NewExerciseForm } from "./components/ExerciseForm";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+interface Page<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
 }
 
-export default App
+type View = "list" | "new" | "exercise";
+
+function App() {
+  const [workouts, setWorkouts] = useState<WorkoutDTO[]>([]);
+  const [view, setView] = useState<View>("list");
+
+  function fetchWorkouts() {
+    axios
+      .get<Page<WorkoutDTO>>("http://localhost:8080/workouts/user/1?page=0&linesPerPage=10")
+      .then((response) => setWorkouts(response.data.content))
+      .catch((error) => console.error("Error fetching workouts:", error));
+  }
+
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
+
+  function handleWorkoutCreated() {
+    fetchWorkouts();
+    setView("list");
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-8 font-sans">
+      <div className="max-w-2xl mx-auto">
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-extrabold text-blue-600">
+            Ironlog
+          </h1>
+          {view !== "list" ? (
+            <button
+              onClick={() => setView("list")}
+              className="text-gray-500 hover:text-gray-700 font-medium transition"
+            >
+              ← Voltar
+            </button>
+          ) : (
+            <div className="flex gap-3">
+              <button
+                onClick={() => setView("exercise")}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-5 py-2 rounded-xl transition"
+              >
+                + Exercício
+              </button>
+              <button
+                onClick={() => setView("new")}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-xl transition"
+              >
+                + Novo Treino
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Views */}
+        {view === "new" ? (
+          <NewWorkoutForm userId={1} onSuccess={handleWorkoutCreated} />
+        ) : view === "exercise" ? (
+          <NewExerciseForm onSuccess={() => setView("list")} />
+        ) : workouts.length === 0 ? (
+          <p className="text-gray-500 text-lg text-center animate-pulse">
+            Carregando treinos ou nenhum treino encontrado...
+          </p>
+        ) : (
+          <div className="space-y-6">
+            {workouts.map((workout) => (
+              <WorkoutCard key={workout.id} workout={workout} onUpdate={fetchWorkouts}/>
+            ))}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+export default App;
