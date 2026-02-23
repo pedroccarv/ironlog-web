@@ -23,7 +23,7 @@ export function NewWorkoutSetForm({ workoutId, onSuccess }: NewWorkoutSetFormPro
             .then((res) => setExercises(res.data));
     }, []);
 
-    async function handleSubmit(e: React.SubmitEvent) {
+    async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
         e.preventDefault();
 
         try {

@@ -10,7 +10,7 @@ export function NewExerciseForm({ onSuccess }: ExerciseFormProps) {
     const [name, setName] = useState("");
     const [muscleGroup, setMuscleGroup] = useState("");
 
-    async function handleSubmit(e:React.SubmitEvent) {
+    async function handleSubmit(e:React.SyntheticEvent<HTMLFormElement>) {
         e.preventDefault();
         
         try {
