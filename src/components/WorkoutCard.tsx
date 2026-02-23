@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NewWorkoutSetForm } from "./NewWorkoutSetForm";
+import axios from "axios";
 
 export interface WorkoutSetDTO {
   id: number;
@@ -24,6 +25,17 @@ interface WorkoutCardProps {
 export function WorkoutCard({ workout, onUpdate }: WorkoutCardProps) {
   const [isAdding, setIsAdding] = useState(false);
 
+  const handleDeleteSet = async (setId: number) => {
+    if (window.confirm("Tem certeza que deseja excluir esta série?")) {
+      try {
+        await axios.delete(`http://localhost:8080/workout-sets/${setId}`);
+        onUpdate?.();
+      } catch (error) {
+        console.error("Erro ao excluir série:", error);
+        alert("Ocorreu um erro ao excluir a série. Por favor, tente novamente.")
+      }
+    }
+  }
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 transition-all hover:shadow-md">
       <div className="flex justify-between items-center mb-5 border-b pb-3">
@@ -36,11 +48,18 @@ export function WorkoutCard({ workout, onUpdate }: WorkoutCardProps) {
       {workout.sets && workout.sets.length > 0 ? (
         <ul className="space-y-3">
           {workout.sets.map((set) => (
-            <li key={set.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <li key={set.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100 group transition-all hover:bg-red-50">
               <span className="font-bold text-gray-700 text-lg">{set.exerciseName}</span>
               <div className="text-gray-600 text-sm flex gap-4">
                 <span>{set.sets}x{set.reps} reps</span>
                 <span className="font-extrabold text-blue-600 w-16 text-right">{set.weight} kg</span>
+                <button
+                  onClick={() => handleDeleteSet(set.id)}
+                  className="text-red-400 hover:text-red-600 font-extrabold px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Excluir Série"
+                >
+                  ✕
+                </button>
               </div>
             </li>
           ))}
